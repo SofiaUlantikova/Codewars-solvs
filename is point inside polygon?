@@ -1,0 +1,41 @@
+{-In this kata, you're going write a function called pointInPoly to test if a point is inside a polygon.
+Points will be represented as [x,y] arrays.
+The polygon will be an array of points which are the polygon's vertices. The last point in the array connects back to the first point.-}
+module PointInPolygon where
+import Data.List (sortBy)
+import Data.Function (on)
+import Control.Composition ((+>))
+
+type Point = (Double, Double)
+
+inf = 1 / 0 :: Double
+
+line :: Point -> Point -> Point -- (k, b)
+line (x1, y1) (x2,y2) = (k, b)
+    where 
+        k = (y2 - y1) / (x2 - x1)
+        b = y1 - k * x1
+        
+inHalfplane :: Point -> Point -> Point -> Point -> Bool
+inHalfplane p1@(x1, _) p2 (x3, y3) (x4, y4) | abs k == inf = if (x1 < x3 && x1 <= x4) || (x1 > x3 && x1 >= x4) then True else False
+    | (f x3 > y3) && (f x4 >= y4) = True
+    | (f x3 < y3) && (f x4 <= y4) = True
+    | otherwise = False
+    where
+        (k, b) = line p1 p2
+        f x = k * x + b
+
+inTriang :: [Point] -> Point -> Bool
+inTriang [p1, p2, p3] p = inHalfplane p1 p2 p3 p && inHalfplane p1 p3 p2 p && inHalfplane p2 p3 p1 p
+   
+center :: [Point] -> Point
+center ps = (/quon) . sum +> ps' where
+    ps' = unzip ps
+    quon = fromIntegral $ length ps    
+
+pointInPoly :: [Point] -> Point -> Bool
+pointInPoly poly point = helper poly point where
+    pfirst = head poly
+    p = center poly
+    helper (p1:p2:ps) point = inTriang [p, p1, p2] point || helper (p2:ps) point
+    helper (plast:ps) point = inTriang [p, plast, pfirst] point
